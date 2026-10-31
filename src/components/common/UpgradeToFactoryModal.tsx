@@ -82,7 +82,7 @@ export const UpgradeToFactoryModal: React.FC<UpgradeToFactoryModalProps> = ({
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-xs text-amber-950 flex items-start gap-2.5">
           <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
           <div>
-            <span className="font-bold">Regulasi Bursa Scrap & Bahan Baku TRAZYL:</span>
+            <span className="font-bold">Regulasi Bursa Scrap & Bahan Baku Scrava:</span>
             <p className="text-[11px] text-amber-800 mt-0.5 leading-relaxed">
               {reasonMessage ||
                 'Akun Customer secara default berstatus Penjual (Depo/Pengepul). Untuk membeli material industri, menerbitkan PO timbang bayar, atau membuka tender pengadaan (RFQ), Anda wajib melengkapi dokumen legalitas resmi di bawah ini.'}

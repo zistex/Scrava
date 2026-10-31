@@ -134,7 +134,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ navigate }) => {
       type: 'credit',
       amount: topupAmount,
       status: 'SUCCESS',
-      ref: transferProofRef.trim() || `TOPUP-TRAZYL-${Math.floor(100000 + Math.random() * 900000)}`,
+      ref: transferProofRef.trim() || `TOPUP-SCRAVA-${Math.floor(100000 + Math.random() * 900000)}`,
     };
     setTransactionsHistory([newTx, ...transactionsHistory]);
     setTopupModalOpen(false);
@@ -308,7 +308,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ navigate }) => {
                     Top-Up Saldo Escrow Pabrik
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Rekening penampung resmi platform TRAZYL sesuai regulasi Bank Indonesia (BI)
+                    Rekening penampung resmi platform Scrava sesuai regulasi Bank Indonesia (BI)
                   </p>
                 </div>
               </div>
@@ -384,7 +384,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ navigate }) => {
                   2. Pilih Metode Pembayaran
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                  {/* Metode 1: Transfer Bank Escrow TRAZYL (Sesuai Aturan BI) */}
+                  {/* Metode 1: Transfer Bank Escrow Scrava (Sesuai Aturan BI) */}
                   <button
                     type="button"
                     onClick={() => setTopupMethod('escrow_transfer')}
@@ -458,7 +458,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ navigate }) => {
                   <div className="space-y-3.5">
                     <div className="flex items-center justify-between">
                       <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                        <span>Pilih Rekening Bank Escrow TRAZYL:</span>
+                        <span>Pilih Rekening Bank Escrow Scrava:</span>
                       </div>
                       <div className="flex gap-2">
                         <button
@@ -528,7 +528,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ navigate }) => {
                       <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
                         <div>
                           <div className="text-[11px] text-slate-500">Atas Nama Rekening:</div>
-                          <div className="font-bold text-slate-900">PT TRAZYL NIAGA INDONESIA (ESCROW)</div>
+                          <div className="font-bold text-slate-900">PT SCRAVA NIAGA INDONESIA (ESCROW)</div>
                         </div>
                         <div className="text-right">
                           <div className="text-[11px] text-slate-500">Cabang:</div>
@@ -626,7 +626,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ navigate }) => {
                         </button>
                       </div>
                       <div className="text-[11px] text-slate-500 pt-2 border-t border-slate-100">
-                        Atas Nama: <strong>TRAZYL ESCROW - {currentCompany.name}</strong>
+                        Atas Nama: <strong>SCRAVA ESCROW - {currentCompany.name}</strong>
                       </div>
                     </div>
 

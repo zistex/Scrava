@@ -75,6 +75,10 @@ export const CreateListingPage: React.FC<CreateListingProps> = ({ navigate }) =>
   const [city, setCity] = useState('Surabaya');
   const [address, setAddress] = useState('Kawasan Industri Rungkut Blok H-12');
 
+  // Promotion Plan Setting (Berbayar vs Gratis)
+  const [isPaidPromotion, setIsPaidPromotion] = useState<boolean>(false);
+  const [promotionTier, setPromotionTier] = useState<'STANDARD_FREE' | 'PREMIUM_FEATURED'>('STANDARD_FREE');
+
   const handleImageFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -114,8 +118,14 @@ export const CreateListingPage: React.FC<CreateListingProps> = ({ navigate }) =>
       photos: quickImage ? [quickImage] : [SAMPLE_IMAGES.hmsScrap],
       description: quickDescription,
       status: 'Published',
+      isPaidPromotion,
+      promotionTier: isPaidPromotion ? 'PREMIUM_FEATURED' : 'STANDARD_FREE',
     });
-    showToast('Listing kilat material berhasil diterbitkan ke bursa!');
+    showToast(
+      isPaidPromotion
+        ? 'Listing BERBAYAR (Prioritas) berhasil diterbitkan! Listing Anda diutamakan di posisi teratas.'
+        : 'Listing GRATIS berhasil diterbitkan ke katalog bursa!'
+    );
     navigate('listing-detail', { id: created.id });
   };
 
@@ -143,8 +153,14 @@ export const CreateListingPage: React.FC<CreateListingProps> = ({ navigate }) =>
       bidIncrement: listingType === 'AUCTION' ? bidIncrement : undefined,
       specs,
       status: 'Published',
+      isPaidPromotion,
+      promotionTier: isPaidPromotion ? 'PREMIUM_FEATURED' : 'STANDARD_FREE',
     });
-    showToast('Listing material berhasil diterbitkan ke bursa!');
+    showToast(
+      isPaidPromotion
+        ? 'Listing BERBAYAR (Prioritas) berhasil diterbitkan! Listing Anda diutamakan di posisi teratas.'
+        : 'Listing GRATIS berhasil diterbitkan ke katalog bursa!'
+    );
     navigate('listing-detail', { id: created.id });
   };
 
@@ -416,6 +432,65 @@ export const CreateListingPage: React.FC<CreateListingProps> = ({ navigate }) =>
                 className="w-full p-2.5 text-xs border border-slate-300 rounded focus:border-emerald-600 focus:outline-hidden leading-relaxed"
                 required
               />
+            </div>
+
+            {/* Setting Iklan: Berbayar atau Gratis */}
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold text-slate-800 flex items-center justify-between">
+                <span>Pengaturan Publikasi Iklan *</span>
+                <span className="text-[10px] text-slate-500">Pilih opsi Gratis atau Berbayar (Prioritas)</span>
+              </label>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsPaidPromotion(false);
+                    setPromotionTier('STANDARD_FREE');
+                  }}
+                  className={`p-3 rounded-lg border text-left transition-all cursor-pointer ${
+                    !isPaidPromotion
+                      ? 'border-emerald-600 bg-emerald-50/50 ring-1 ring-emerald-500'
+                      : 'border-slate-200 bg-white hover:bg-slate-50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-bold text-slate-900">Publikasi Gratis</span>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">
+                      Rp 0 / Bebas Biaya
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 leading-tight">
+                    Listing standar di katalog bursa scrap. Verifikasi legalitas normal.
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsPaidPromotion(true);
+                    setPromotionTier('PREMIUM_FEATURED');
+                  }}
+                  className={`p-3 rounded-lg border text-left transition-all cursor-pointer ${
+                    isPaidPromotion
+                      ? 'border-amber-500 bg-amber-50/60 ring-1 ring-amber-500'
+                      : 'border-slate-200 bg-white hover:bg-slate-50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-bold text-amber-900 flex items-center gap-1">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                      Berbayar (Prioritas)
+                    </span>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-200 text-amber-900">
+                      Rp 99.000
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 leading-tight">
+                    Prioritas di atas bursa, badge <strong>HOT / FEATURED</strong>, broadcast notifikasi ke 50+ pabrik & smelter.
+                  </p>
+                </button>
+              </div>
             </div>
 
             <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs bg-slate-50 p-3 rounded-lg border border-slate-100">
@@ -822,6 +897,65 @@ export const CreateListingPage: React.FC<CreateListingProps> = ({ navigate }) =>
               />
             </div>
 
+            {/* Setting Iklan: Berbayar atau Gratis */}
+            <div className="space-y-2 pt-2">
+              <label className="block text-xs font-semibold text-slate-800 flex items-center justify-between">
+                <span>Pilih Tipe Publikasi Iklan *</span>
+                <span className="text-[10px] text-slate-500">Pilih opsi Gratis atau Berbayar (Prioritas)</span>
+              </label>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsPaidPromotion(false);
+                    setPromotionTier('STANDARD_FREE');
+                  }}
+                  className={`p-3 rounded-lg border text-left transition-all cursor-pointer ${
+                    !isPaidPromotion
+                      ? 'border-emerald-600 bg-emerald-50/50 ring-1 ring-emerald-500'
+                      : 'border-slate-200 bg-white hover:bg-slate-50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-bold text-slate-900">Publikasi Standar (Gratis)</span>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">
+                      Rp 0 / Bebas Biaya
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 leading-tight">
+                    Listing standar di katalog bursa scrap tanpa biaya tambahan.
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsPaidPromotion(true);
+                    setPromotionTier('PREMIUM_FEATURED');
+                  }}
+                  className={`p-3 rounded-lg border text-left transition-all cursor-pointer ${
+                    isPaidPromotion
+                      ? 'border-amber-500 bg-amber-50/60 ring-1 ring-amber-500'
+                      : 'border-slate-200 bg-white hover:bg-slate-50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-bold text-amber-900 flex items-center gap-1">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                      Berbayar (Prioritas & Highlight)
+                    </span>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-200 text-amber-900">
+                      Rp 99.000
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 leading-tight">
+                    Posisi atas bursa, pin HOT badge, dan blast ke pembeli pabrik verified.
+                  </p>
+                </button>
+              </div>
+            </div>
+
             {/* Final Summary Card */}
             <div className="mt-4 p-4 bg-slate-50 border border-slate-200 rounded text-xs space-y-2">
               <div className="font-bold text-slate-900 uppercase tracking-wider text-[11px]">
@@ -838,6 +972,12 @@ export const CreateListingPage: React.FC<CreateListingProps> = ({ navigate }) =>
               <div className="flex justify-between py-1 border-b border-slate-200">
                 <span className="text-slate-500">Skema Dagang:</span>
                 <span className="font-semibold text-slate-900">{listingType} ({incoterm})</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-slate-200">
+                <span className="text-slate-500">Tipe Iklan:</span>
+                <span className={`font-semibold ${isPaidPromotion ? 'text-amber-700' : 'text-slate-700'}`}>
+                  {isPaidPromotion ? 'Berbayar (Prioritas Rp 99.000)' : 'Gratis (Standar)'}
+                </span>
               </div>
               <div className="flex justify-between py-1">
                 <span className="text-slate-500">Harga Tertera:</span>

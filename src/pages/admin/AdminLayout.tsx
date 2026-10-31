@@ -10,7 +10,8 @@ import {
   ArrowLeft,
   ShieldCheck,
   CheckCircle2,
-  LogOut
+  LogOut,
+  Gavel
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -30,13 +31,19 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ currentPath, navigate,
     navigate('home');
   };
 
-  // Exact 5 Core Admin Features requested by user
+  // Exact 5 Core Admin Features requested by user + Project Auctions
   const adminMenuItems = [
     {
       label: 'Ringkasan Dashboard',
       path: 'admin-overview',
       icon: LayoutDashboard,
       desc: 'Ringkasan metriks bursa & status operasional',
+    },
+    {
+      label: 'Lelang Proyek & Jaminan',
+      path: 'admin-project-auctions',
+      icon: Gavel,
+      desc: 'Verifikasi jaminan, penawaran OTP, pemenang & refund',
     },
     {
       label: 'Manage Pelanggan',

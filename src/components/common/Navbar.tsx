@@ -23,7 +23,8 @@ import {
   ChevronDown,
   Layers,
   Check,
-  LogOut
+  LogOut,
+  Gavel
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -498,13 +499,13 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
 
             {/* Quick Channel Links (Shortened to 1-2 words) */}
             <button
-              onClick={() => navigate('procurement-hub')}
+              onClick={() => navigate('register')}
               className={`flex items-center gap-1.5 transition-colors font-semibold ${
-                currentPath === 'procurement-hub' ? 'text-emerald-700 font-bold' : 'text-slate-700 hover:text-emerald-700'
+                currentPath === 'register' ? 'text-emerald-700 font-bold' : 'text-slate-700 hover:text-emerald-700'
               }`}
             >
-              <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-              <span>{t('nav.split_order', 'Split Order')}</span>
+              <User className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Daftar</span>
               <span className="bg-emerald-100/80 text-emerald-800 text-[10px] font-bold px-1.5 py-0.2 rounded-full">
                 HOT
               </span>
@@ -537,6 +538,19 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
             >
               <Flame className="w-3.5 h-3.5 text-amber-500" />
               <span>{t('nav.flash_auctions', 'Lelang Kilat')}</span>
+            </button>
+
+            <button
+              onClick={() => navigate('project-auctions')}
+              className={`flex items-center gap-1 transition-colors ${
+                currentPath === 'project-auctions' ? 'text-emerald-700 font-bold' : 'text-slate-700 hover:text-emerald-700'
+              }`}
+            >
+              <Gavel className="w-3.5 h-3.5 text-blue-600" />
+              <span>Lelang Proyek</span>
+              <span className="bg-blue-100 text-blue-800 text-[10px] font-bold px-1.5 py-0.2 rounded-full">
+                Jaminan
+              </span>
             </button>
           </div>
 
@@ -608,12 +622,27 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
           </button>
           <button
             onClick={() => {
-              navigate('procurement-hub');
+              navigate('register');
               setMobileMenuOpen(false);
             }}
-            className="block w-full text-left py-2 text-sm font-semibold text-emerald-700 hover:text-emerald-800 border-b border-slate-100"
+            className="block w-full text-left py-2 text-sm font-semibold text-emerald-700 hover:text-emerald-800 border-b border-slate-100 flex items-center justify-between"
           >
-            {t('nav.split_order', 'Split Order')}
+            <span>*Daftar*</span>
+            <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+              HOT
+            </span>
+          </button>
+          <button
+            onClick={() => {
+              navigate('project-auctions');
+              setMobileMenuOpen(false);
+            }}
+            className="block w-full text-left py-2 text-sm font-semibold text-blue-700 hover:text-blue-800 border-b border-slate-100 flex items-center justify-between"
+          >
+            <span>Lelang Proyek</span>
+            <span className="bg-blue-100 text-blue-800 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+              Jaminan
+            </span>
           </button>
           <button
             onClick={() => {

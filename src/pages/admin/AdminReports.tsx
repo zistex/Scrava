@@ -276,7 +276,7 @@ export const AdminReports: React.FC<AdminReportsProps> = () => {
     link.setAttribute('href', encodedUri);
     link.setAttribute(
       'download',
-      `Laporan_Transaksi_TRAZYL_${startDate}_sd_${endDate}.csv`
+      `Laporan_Transaksi_Scrava_${startDate}_sd_${endDate}.csv`
     );
     document.body.appendChild(link);
     link.click();
@@ -488,7 +488,7 @@ export const AdminReports: React.FC<AdminReportsProps> = () => {
       <div className="hidden print:block border-b-2 border-slate-900 pb-4 mb-4">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-xl font-black text-slate-900">PT TRAZYL BURSA LOGAM INDONESIA</h1>
+            <h1 className="text-xl font-black text-slate-900">PT SCRAVA BURSA LOGAM INDONESIA</h1>
             <p className="text-xs text-slate-600">Laporan Rekapitulasi Transaksi Perdagangan Bahan Baku</p>
           </div>
           <div className="text-right text-xs text-slate-600 font-mono">
@@ -614,12 +614,12 @@ export const AdminReports: React.FC<AdminReportsProps> = () => {
         <div>
           <div className="text-slate-500">Disiapkan Oleh:</div>
           <div className="mt-16 font-bold text-slate-900">Superadmin Operasional Bursa</div>
-          <div className="text-slate-400 text-[10px]">PT TRAZYL BURSA LOGAM</div>
+          <div className="text-slate-400 text-[10px]">PT SCRAVA BURSA LOGAM</div>
         </div>
         <div>
           <div className="text-slate-500">Mengetahui / Disetujui:</div>
           <div className="mt-16 font-bold text-slate-900">Direktur Keuangan & Kliring</div>
-          <div className="text-slate-400 text-[10px]">PT TRAZYL BURSA LOGAM</div>
+          <div className="text-slate-400 text-[10px]">PT SCRAVA BURSA LOGAM</div>
         </div>
       </div>
     </div>

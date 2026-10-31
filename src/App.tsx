@@ -20,6 +20,7 @@ import { HowItWorksPage } from './pages/public/HowItWorksPage';
 import { AuthPages } from './pages/public/AuthPages';
 import { ProcurementHubPage } from './pages/public/ProcurementHubPage';
 import { CheckoutPage } from './pages/public/CheckoutPage';
+import { ProjectAuctionPage } from './pages/public/ProjectAuctionPage';
 
 // Dashboard Pages
 import { DashboardLayout } from './pages/dashboard/DashboardLayout';
@@ -36,6 +37,7 @@ import { NegotiationsPage } from './pages/dashboard/NegotiationsPage';
 import { BidsPage } from './pages/dashboard/BidsPage';
 import { FinancePages } from './pages/dashboard/FinancePages';
 import { CompanyProfilePage } from './pages/dashboard/CompanyProfilePage';
+import { ProjectBidsHistoryPage } from './pages/dashboard/ProjectBidsHistoryPage';
 
 // Admin Pages
 import { AdminLayout } from './pages/admin/AdminLayout';
@@ -55,6 +57,7 @@ import { AdminOrdersOps } from './pages/admin/AdminOrdersOps';
 import { AdminDisputes } from './pages/admin/AdminDisputes';
 import { AdminFeeConfig } from './pages/admin/AdminFeeConfig';
 import { AdminAuditLogs } from './pages/admin/AdminAuditLogs';
+import { AdminProjectAuctions } from './pages/admin/AdminProjectAuctions';
 
 // Mobile bottom navigation icons
 import { Home, Store, Package, MessageSquare, User, Flame, Building, LayoutDashboard } from 'lucide-react';
@@ -106,6 +109,10 @@ const AppContent: React.FC = () => {
         return <ReverseBidPage navigate={navigate} />;
       case 'procurement-hub':
         return <ProcurementHubPage navigate={navigate} />;
+      case 'project-auctions':
+      case 'project-auction':
+      case 'project-auction-detail':
+        return <ProjectAuctionPage navigate={navigate} selectedProjectId={pageParams.id} />;
       case 'requirement-detail':
         return <RequirementDetailPage id={pageParams.id || 'RFQ-701'} navigate={navigate} />;
       case 'how-it-works':
@@ -128,6 +135,9 @@ const AppContent: React.FC = () => {
         return <WalletPage navigate={navigate} />;
       case 'dashboard-bids-nego':
         return <BidsAndNegoPage navigate={navigate} />;
+      case 'dashboard-project-bids':
+      case 'dashboard-project-auctions':
+        return <ProjectBidsHistoryPage navigate={navigate} />;
       case 'dashboard-checkout':
         return <CheckoutPage listingId={pageParams.id || pageParams.listingId} navigate={navigate} />;
       case 'dashboard-procurement-hub':
@@ -160,6 +170,9 @@ const AppContent: React.FC = () => {
       // Superadmin Console Routes (CRUD Penjual, Pembeli, Verifikasi, Transaksi, Pengiriman Manual, Pembayaran, Laporan)
       case 'admin-overview':
         return <AdminOverview navigate={navigate} />;
+      case 'admin-project-auctions':
+      case 'admin-lelang-proyek':
+        return <AdminProjectAuctions />;
       case 'admin-penjual':
       case 'admin-users':
       case 'admin-pelanggan':
@@ -280,13 +293,13 @@ const AppContent: React.FC = () => {
               </button>
 
               <button
-                onClick={() => navigate('login')}
+                onClick={() => navigate('register')}
                 className={`flex-1 py-1 flex flex-col items-center justify-center gap-1 transition-colors ${
                   currentPath === 'login' || currentPath === 'register' ? 'text-emerald-700 font-bold' : 'text-slate-500 hover:text-slate-900 font-medium'
                 }`}
               >
                 <User className={`w-5 h-5 ${currentPath === 'login' || currentPath === 'register' ? 'stroke-[2.5]' : 'stroke-2'}`} />
-                <span className="text-[11px] leading-tight">Masuk</span>
+                <span className="text-[11px] leading-tight">Daftar</span>
               </button>
             </>
           ) : (

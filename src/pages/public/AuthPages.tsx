@@ -22,13 +22,15 @@ import {
   User
 } from 'lucide-react';
 
+import { apiClient } from '../../api/client';
+
 interface AuthPageProps {
   mode: 'login' | 'register' | 'verification';
   navigate: (path: string, params?: any) => void;
 }
 
 export const AuthPages: React.FC<AuthPageProps> = ({ mode: initialMode, navigate }) => {
-  const { setUserRole, kycProgress, updateKycProgress, currentCompany, showToast } = useApp();
+  const { setUserRole, setCurrentUser, kycProgress, updateKycProgress, currentCompany, showToast } = useApp();
 
   const [activeTab, setActiveTab] = useState<'login' | 'register'>(
     initialMode === 'register' ? 'register' : 'login'
@@ -50,9 +52,19 @@ export const AuthPages: React.FC<AuthPageProps> = ({ mode: initialMode, navigate
   const [agreeTerms, setAgreeTerms] = useState(true);
 
   // Quick Google Sign-In / Sign-Up Simulator
-  const handleGoogleAuth = () => {
-    // Default registration/login is Pengepul/Depo (seller) as requested
+  const handleGoogleAuth = async () => {
     const targetRole = activeTab === 'register' ? registerRole : 'seller';
+    try {
+      const res = await apiClient.auth.login({
+        email: (targetRole as string) === 'admin' ? 'admin@scrava.id' : 'pengguna@scrava.id',
+        role: targetRole,
+      });
+      if (res.user) {
+        setCurrentUser(res.user);
+      }
+    } catch (err) {
+      console.warn('API Google auth warning:', err);
+    }
     setUserRole(targetRole);
     showToast('Berhasil masuk dengan akun Google! Selamat datang di Scrava.');
     navigate('dashboard-overview');
@@ -69,8 +81,21 @@ export const AuthPages: React.FC<AuthPageProps> = ({ mode: initialMode, navigate
     }
   };
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    try {
+      const res = await apiClient.auth.login({
+        email: loginEmail,
+        password: loginPassword,
+        role: selectedLoginRole,
+      });
+      if (res.user) {
+        setCurrentUser(res.user);
+      }
+    } catch (err) {
+      console.warn('API login error:', err);
+    }
+
     setUserRole(selectedLoginRole);
     if (selectedLoginRole === 'admin') {
       showToast('Berhasil masuk sebagai Administrator Operasional Scrava');
@@ -84,7 +109,7 @@ export const AuthPages: React.FC<AuthPageProps> = ({ mode: initialMode, navigate
     }
   };
 
-  const handleRegisterSubmit = (e: React.FormEvent) => {
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!agreeTerms) {
       showToast('Harap setujui Syarat & Ketentuan serta Protokol Escrow.');
@@ -94,6 +119,22 @@ export const AuthPages: React.FC<AuthPageProps> = ({ mode: initialMode, navigate
     if (registerRole === 'buyer' && !companyName.trim()) {
       showToast('Harap isi Nama Resmi Perusahaan (PT/CV) untuk akun Pabrik.');
       return;
+    }
+
+    try {
+      const res = await apiClient.auth.register({
+        name: fullName || 'Pengguna Baru Scrava',
+        email: email || `user_${Date.now()}@scrava.id`,
+        phone,
+        companyName: companyName || (registerRole === 'buyer' ? 'PT Pabrik Logam Industri' : 'Depo Scrap Mandiri'),
+        businessType: registerRole === 'buyer' ? factoryCategory : 'Depo Scrap & Pengepul Logam',
+        role: registerRole,
+      });
+      if (res.user) {
+        setCurrentUser(res.user);
+      }
+    } catch (err) {
+      console.warn('API register error:', err);
     }
 
     setUserRole(registerRole);

@@ -70,6 +70,8 @@ export interface Listing {
   closingDate?: string;
   closingCountdown?: string;
   viewsCount?: number;
+  isPaidPromotion?: boolean;
+  promotionTier?: 'FREE' | 'PAID' | 'PREMIUM_FEATURED' | 'STANDARD_FREE';
 }
 
 export interface AuctionBid {
@@ -509,4 +511,60 @@ export interface PlatformFeeConfig {
   status: 'Active' | 'Inactive';
   effectiveDate: string;
 }
+
+export interface ProjectAuction {
+  id: string;
+  title: string;
+  category: string;
+  description: string;
+  photos: string[];
+  images?: string[];
+  startingBid: number;
+  currentHighestBid: number;
+  bidIncrement: number;
+  securityDeposit: number;
+  depositDeductionFee: number;
+  status: 'UPCOMING' | 'OPEN' | 'CLOSED' | 'AWARDED' | 'BIDDING_OPEN';
+  winnerCompany?: string | null;
+  winnerBid?: number | null;
+  winnerSettlementStatus?: 'PENDING_PAYMENT' | 'SETTLED';
+  location: string;
+  aanwijzingDate: string;
+  deadline: string;
+  bidClosingDate?: string;
+  sellerCompany?: string;
+  ownerCompany?: string;
+  estimatedVolume?: number;
+  unit?: string;
+  specifications?: Record<string, string>;
+  totalBids: number;
+  createdAt: string;
+}
+
+export interface AuctionDeposit {
+  id: string;
+  projectId: string;
+  companyName: string;
+  amount: number;
+  vaNumber: string;
+  bank: string;
+  status: 'PENDING_PAYMENT' | 'VERIFIED' | 'REFUNDED' | 'SETTLED_TO_WINNER';
+  deductionAmount?: number;
+  netRefundAmount?: number;
+  createdAt: string;
+  verifiedAt?: string;
+  refundedAt?: string;
+}
+
+export interface ProjectBid {
+  id: string;
+  projectId: string;
+  bidderCompany: string;
+  amount: number;
+  otpCode?: string;
+  otpVerified: boolean | number;
+  status: 'WINNING' | 'OUTBID' | 'WON' | 'LOST';
+  timestamp: string;
+}
+
 

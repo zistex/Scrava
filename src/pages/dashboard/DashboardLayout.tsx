@@ -15,7 +15,8 @@ import {
   X,
   AlertCircle,
   CheckCircle2,
-  ArrowRight
+  ArrowRight,
+  Gavel
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -94,6 +95,12 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ currentPath, n
       icon: MessageSquare,
       badge: pendingNegCount > 0 ? String(pendingNegCount) : undefined,
       desc: 'Negosiasi harga & histori bid lelang',
+    },
+    {
+      label: 'Lelang Proyek & Riwayat Bid',
+      path: 'dashboard-project-bids',
+      icon: Gavel,
+      desc: 'Status jaminan, penawaran OTP & pelunasan/refund',
     },
     {
       label: 'Kebutuhan Pabrik (RFQ)',

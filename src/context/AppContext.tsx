@@ -41,6 +41,7 @@ import {
   CURRENCIES,
 } from '../data/mockData';
 import { TRANSLATIONS, Language } from '../data/translations';
+import { apiClient } from '../api/client';
 
 interface AppContextType {
   t: (key: string, fallback?: string) => string;
@@ -126,22 +127,9 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [userRole, setUserRole] = useState<UserRole>('customer');
-  const [currentUser, setCurrentUser] = useState<CurrentUser | null>({
-    id: 'USR-DEFAULT',
-    name: 'Hendra Wijaya',
-    email: 'zistex.team@gmail.com',
-    phone: '0812-3456-7890',
-    role: 'customer',
-    companyName: 'Depo Scrap Berkah Mandiri',
-    businessType: 'Depo Scrap & Pengepul Logam',
-    isGoogleAuth: true,
-    isVerified: true,
-    isBuyerVerified: false, // Default: Penjual (Pengepul), Pembeli belum terverifikasi
-    legalDocs: {
-      status: 'UNVERIFIED',
-    },
-  });
+  // User starts as public (not logged in) so message, cart, and notif are strictly hidden until login
+  const [userRole, setUserRole] = useState<UserRole>('public');
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [activeCurrency, setActiveCurrency] = useState<string>('IDR');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [listings, setListings] = useState<Listing[]>(INITIAL_LISTINGS);
@@ -162,6 +150,63 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isOffPlatformWarningOpen, setIsOffPlatformWarningOpen] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [language, setLanguageState] = useState<'EN' | 'ID'>('ID');
+
+  // Synchronize state with backend Express API & SQLite Database
+  useEffect(() => {
+    const fetchApiData = async () => {
+      try {
+        const [
+          fetchedListings,
+          fetchedNegos,
+          fetchedReverseBids,
+          fetchedOrders,
+          fetchedDisputes,
+          fetchedProjects,
+          fetchedCompanies,
+          sessionRes,
+        ] = await Promise.allSettled([
+          apiClient.listings.getAll(),
+          apiClient.negotiations.getAll(),
+          apiClient.reverseBids.getAll(),
+          apiClient.orders.getAll(),
+          apiClient.disputes.getAll(),
+          apiClient.procurementProjects.getAll(),
+          apiClient.companies.getAll(),
+          apiClient.auth.getMe(),
+        ]);
+
+        if (fetchedListings.status === 'fulfilled' && fetchedListings.value?.length) {
+          setListings(fetchedListings.value);
+        }
+        if (fetchedNegos.status === 'fulfilled' && fetchedNegos.value?.length) {
+          setNegotiations(fetchedNegos.value);
+        }
+        if (fetchedReverseBids.status === 'fulfilled' && fetchedReverseBids.value?.length) {
+          setReverseBids(fetchedReverseBids.value);
+        }
+        if (fetchedOrders.status === 'fulfilled' && fetchedOrders.value?.length) {
+          setOrders(fetchedOrders.value);
+        }
+        if (fetchedDisputes.status === 'fulfilled' && fetchedDisputes.value?.length) {
+          setDisputes(fetchedDisputes.value);
+        }
+        if (fetchedProjects.status === 'fulfilled' && fetchedProjects.value?.length) {
+          setProcurementProjects(fetchedProjects.value);
+        }
+        if (fetchedCompanies.status === 'fulfilled' && fetchedCompanies.value?.length) {
+          setCompanyProfiles(fetchedCompanies.value);
+        }
+        if (sessionRes.status === 'fulfilled' && sessionRes.value?.user) {
+          setCurrentUser(sessionRes.value.user);
+          setUserRole(sessionRes.value.user.role as UserRole);
+        }
+      } catch (err) {
+        console.warn('API sync warning:', err);
+      }
+    };
+
+    fetchApiData();
+  }, []);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -254,7 +299,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Split Order Execution
-  const executeSplitOrder = (
+  const executeSplitOrder = async (
     requirementId: string,
     allocations: { supplierCompany: string; allocatedQty: number; unitPrice: number; pickupTerms: string }[]
   ) => {
@@ -272,14 +317,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       })
     );
 
+    try {
+      const res = await apiClient.reverseBids.executeSplitOrder(requirementId, allocations);
+      if (res.createdOrders && res.createdOrders.length > 0) {
+        setOrders((prev) => [...res.createdOrders, ...prev]);
+      }
+    } catch (err) {
+      console.warn('API executeSplitOrder error:', err);
+    }
+
     const totalAllocated = allocations.reduce((sum, a) => sum + a.allocatedQty, 0);
     showToast(`Split Order Confirmed! ${totalAllocated} MT fulfilled across ${allocations.length} verified suppliers.`);
   };
 
-  const addProcurementProject = (project: Partial<ProcurementProject>) => {
+  const addProcurementProject = async (project: Partial<ProcurementProject>) => {
     const newProj: ProcurementProject = {
-      id: `PRJ-TRZ-${100 + procurementProjects.length + 1}`,
-      projectCode: `TRZ-2026-${100 + procurementProjects.length + 1}`,
+      id: `PRJ-SCR-${100 + procurementProjects.length + 1}`,
+      projectCode: `SCR-2026-${100 + procurementProjects.length + 1}`,
       title: project.title || 'Factory Procurement Package',
       buyerCompany: currentCompany.name,
       deliveryDestination: project.deliveryDestination || 'Industrial Smelter Gate',
@@ -287,9 +341,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       items: project.items || [],
       totalBudgetUSD: project.totalBudgetUSD || 150000,
       status: 'AGGREGATING',
-      createdAt: '2026-09-28',
+      createdAt: new Date().toISOString().slice(0, 10),
     };
     setProcurementProjects([newProj, ...procurementProjects]);
+    try {
+      await apiClient.procurementProjects.create(newProj);
+    } catch (err) {
+      console.warn('API addProcurementProject error:', err);
+    }
     showToast(`Procurement Project ${newProj.projectCode} published for multi-supplier aggregation.`);
   };
 
@@ -357,7 +416,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       photos: newListingData.photos && newListingData.photos.length > 0 ? newListingData.photos : [INITIAL_LISTINGS[0].photos[0]],
       specs: newListingData.specs || { 'Standard': 'Commercial Grade' },
       documents: newListingData.documents || ['Material Spec Sheet.pdf'],
-      createdAt: '2026-09-28',
+      createdAt: new Date().toISOString().slice(0, 10),
       status: 'Published',
       viewsCount: 1,
       minAskingPrice: newListingData.minAskingPrice,
@@ -365,15 +424,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       bidIncrement: newListingData.bidIncrement || 10,
       bidCount: 0,
       closingCountdown: '5d 00h 00m',
+      isPaidPromotion: Boolean(newListingData.isPaidPromotion),
+      promotionTier: newListingData.promotionTier || (newListingData.isPaidPromotion ? 'PREMIUM_FEATURED' : 'STANDARD_FREE'),
     };
 
     setListings([newListing, ...listings]);
+    apiClient.listings.create(newListing).catch(console.warn);
     showToast(`Listing "${newListing.title.slice(0, 30)}..." published successfully!`);
     return newListing;
   };
 
   const updateListingStatus = (id: string, status: Listing['status']) => {
     setListings((prev) => prev.map((l) => (l.id === id ? { ...l, status } : l)));
+    apiClient.listings.updateStatus(id, status).catch(console.warn);
     showToast(`Listing status updated to ${status}`);
   };
 
@@ -398,6 +461,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return l;
       })
     );
+
+    apiClient.listings.placeBid(listingId, amount, currentCompany.name, currentCompany.country).catch(console.warn);
 
     // Add audit log
     const newLog: AuditLog = {
@@ -450,13 +515,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return n;
       })
     );
+    apiClient.negotiations.sendOffer(negId, offer, text).catch(console.warn);
     showToast('Tawaran balasan berhasil dikirim melalui kanal negosiasi resmi.');
   };
 
-  const acceptNegotiation = (negId: string) => {
+  const acceptNegotiation = async (negId: string) => {
     setNegotiations((prev) =>
       prev.map((n) => (n.id === negId ? { ...n, status: 'Accepted', updatedAt: 'Baru saja' } : n))
     );
+    try {
+      const res = await apiClient.negotiations.accept(negId);
+      if (res.createdOrder) {
+        setOrders((prev) => [res.createdOrder, ...prev]);
+      }
+    } catch (err) {
+      console.warn('API acceptNegotiation error:', err);
+    }
     showToast('Tawaran disepakati! Pesanan siap diproses ke checkout pembayaran.');
   };
 
@@ -480,12 +554,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       buyerCompany: currentCompany.name,
       buyerCountry: currentCompany.country,
       buyerVerified: currentCompany.verified,
-      createdAt: '2026-09-28',
+      createdAt: new Date().toISOString().slice(0, 10),
       status: 'OPEN',
       responsesCount: 0,
       responses: [],
     };
     setReverseBids([newReq, ...reverseBids]);
+    apiClient.reverseBids.create(newReq).catch(console.warn);
     showToast('Kebutuhan bahan berhasil diterbitkan! Pemasok akan segera diberi tahu.');
   };
 
@@ -517,6 +592,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return r;
       })
     );
+    apiClient.reverseBids.submitOffer(reqId, offer).catch(console.warn);
     showToast('Penawaran Anda berhasil dikirim ke tim pengadaan pabrik.');
   };
 
@@ -524,7 +600,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const id = `ORD-${Date.now().toString().slice(-6)}`;
     const fullOrder: Order = {
       id,
-      orderNumber: orderData.orderNumber || `TRZ-${Math.floor(100000 + Math.random() * 900000)}`,
+      orderNumber: orderData.orderNumber || `SCR-${Math.floor(100000 + Math.random() * 900000)}`,
       listingId: orderData.listingId || '',
       productTitle: orderData.productTitle || 'Pesanan Bahan Baku Industri',
       productImage: orderData.productImage || '',
@@ -581,9 +657,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         adjustmentDelta: 0,
         status: 'PENDING',
       },
-      createdAt: '2026-09-28',
+      createdAt: new Date().toISOString().slice(0, 10),
     };
     setOrders((prev) => [fullOrder, ...prev]);
+    apiClient.orders.create(fullOrder).catch(console.warn);
     return fullOrder;
   };
 
@@ -593,7 +670,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (o.id === orderId) {
           const updated = { ...o, status };
           if (status === 'COMPLETED') {
-            updated.completedAt = '2026-09-28 17:00';
+            updated.completedAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
             updated.settlement = { ...updated.settlement, status: 'PAID' };
           }
           return updated;
@@ -601,6 +678,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return o;
       })
     );
+    apiClient.orders.updateStatus(orderId, status).catch(console.warn);
     showToast(`Status pesanan diperbarui`);
   };
 
@@ -620,6 +698,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return o;
       })
     );
+    apiClient.orders.confirmSettlement(orderId).catch(console.warn);
     showToast('Pencairan dana dikonfirmasi dan transaksi selesai!');
   };
 
@@ -628,7 +707,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       id: `DSP-${9000 + disputes.length + 1}`,
       disputeNumber: `DISP-2026-${9000 + disputes.length + 1}`,
       orderId: disputeData.orderId || 'ORD-2026-000123',
-      orderNumber: disputeData.orderNumber || 'TRZ-2026-000123',
+      orderNumber: disputeData.orderNumber || 'SCR-2026-000123',
       productTitle: disputeData.productTitle || 'Pesanan Material Industri',
       raisedByCompany: currentCompany.name,
       raisedByRole: isBuyerVerified ? 'buyer' : 'seller',
@@ -643,10 +722,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createdAt: 'Baru saja',
     };
     setDisputes([newDispute, ...disputes]);
-    // Also mark order as disputed
     if (disputeData.orderId) {
       updateOrderStatus(disputeData.orderId, 'DISPUTED');
     }
+    apiClient.disputes.create(newDispute).catch(console.warn);
     showToast('Pengajuan sengketa berhasil dibuka. Mediator admin ditugaskan meninjau berkas.');
   };
 
@@ -654,6 +733,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setDisputes((prev) =>
       prev.map((d) => (d.id === disputeId ? { ...d, status: 'RESOLVED', adminDecision: decision } : d))
     );
+    apiClient.disputes.resolve(disputeId, decision).catch(console.warn);
     showToast('Sengketa berhasil diselesaikan oleh Admin Platform.');
   };
 
@@ -752,28 +832,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const loginWithGoogle = (options?: { role?: 'customer' | 'superadmin' | 'buyer' | 'seller'; name?: string; email?: string; companyName?: string }) => {
     const isSuper = options?.role === 'superadmin';
+    const email = options?.email || (isSuper ? 'superadmin@scrava.id' : 'hendra@scrava.id');
     const newUser: CurrentUser = {
       id: `USR-G-${Date.now()}`,
       name: options?.name || (isSuper ? 'Master Superadmin' : 'Hendra Wijaya'),
-      email: options?.email || (isSuper ? 'superadmin@trazyl.com' : 'zistex.team@gmail.com'),
+      email,
       phone: '0812-9876-5432',
       role: isSuper ? 'superadmin' : 'customer',
-      companyName: isSuper ? 'TRAZYL Exchange Operations' : 'Depo Scrap Berkah Mandiri',
-      businessType: isSuper ? 'Bursa Exchange Operator' : 'Pengepul & Depo Scrap Logam',
+      companyName: isSuper ? 'Scrava Operations HQ' : 'Depo Scrap Berkah Mandiri',
+      businessType: isSuper ? 'Platform & Escrow Operator' : 'Pengepul & Depo Scrap Logam',
       isGoogleAuth: true,
       isVerified: true,
-      isBuyerVerified: false, // Default: Penjual (Pengepul)
+      isBuyerVerified: isSuper,
       legalDocs: {
-        status: 'UNVERIFIED',
+        status: isSuper ? 'VERIFIED' : 'UNVERIFIED',
       },
     };
     setCurrentUser(newUser);
     setUserRole(isSuper ? 'superadmin' : 'customer');
-    showToast(isSuper ? 'Berhasil masuk sebagai Superadmin TRAZYL' : 'Berhasil masuk dengan Google sebagai Customer (Default: Penjual)');
+    apiClient.auth.login({ email, role: isSuper ? 'admin' : 'customer' }).catch(console.warn);
+    showToast(isSuper ? 'Berhasil masuk sebagai Superadmin Scrava' : 'Berhasil masuk dengan Google sebagai Customer');
   };
 
   const upgradeToFactory = (factoryData: { companyName: string; phone?: string; picName?: string; businessType?: string; address?: string; nib?: string; npwp?: string }) => {
     verifyCustomerAsBuyer(factoryData);
+    apiClient.auth.verifyBuyer(factoryData).catch(console.warn);
   };
 
   // Determine current active company by role
@@ -781,7 +864,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     userRole === 'admin' || userRole === 'superadmin'
       ? {
           id: 'ADMIN-01',
-          name: 'TRAZYL Superadmin Operations',
+          name: 'Scrava Superadmin Operations',
           logo: '👑',
           verified: true,
           country: 'Indonesia',
